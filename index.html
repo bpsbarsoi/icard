@@ -553,7 +553,7 @@
 </div>
 
 <div class="btn-group" id="btnGroup" style="display:none;">
-    <button class="btn btn-print" onclick="window.print()">PRINT / SAVE PDF</button>
+    <button onclick="if(window.AndroidPrint){ AndroidPrint.triggerPrint(); } else { window.print(); }"style="...">PRINT / SAVE PDF 🖨️</button>
     <button class="btn btn-back" onclick="location.reload()">BACK</button>
 </div>
 
