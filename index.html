@@ -5,7 +5,15 @@
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 <title>Student ID Card - Barsoi Public School</title>
 <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
+<!-- QRCode JS Library -->
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
 <style>
+    /* A4 Landscape Page Setup for Print/PDF */
+    @page {
+        size: A4 landscape;
+        margin: 10mm;
+    }
+
     body {
         font-family: 'Segoe UI', Arial, sans-serif;
         background-color: #f4f7f6;
@@ -62,7 +70,16 @@
         border-radius: 5px;
     }
 
-    /* ID Card Horizontal Canvas (CR-80 Ratio) */
+    /* Cards Container arranged Horizontally for A4 Landscape */
+    .cards-container {
+        display: none;
+        flex-direction: row;
+        gap: 30px;
+        justify-content: center;
+        align-items: center;
+        flex-wrap: wrap;
+    }
+
     .id-card {
         width: 500px;
         height: 310px;
@@ -73,10 +90,9 @@
         overflow: hidden;
         border: 1px solid #198754;
         box-sizing: border-box;
-        display: none;
     }
 
-    /* Header */
+    /* FRONT SIDE */
     .header {
         background: linear-gradient(135deg, #0f5132, #198754) !important;
         color: #ffffff !important;
@@ -85,7 +101,6 @@
         border-bottom-left-radius: 50% 12px;
         border-bottom-right-radius: 50% 12px;
         position: relative;
-        -webkit-print-color-adjust: exact !important;
     }
 
     .school-title {
@@ -109,7 +124,6 @@
         margin-top: 2px;
         text-transform: uppercase;
         letter-spacing: 1px;
-        -webkit-print-color-adjust: exact !important;
     }
 
     .logo-img {
@@ -123,7 +137,6 @@
         padding: 2px;
     }
 
-    /* Layout */
     .card-body {
         display: flex;
         padding: 10px 15px;
@@ -138,7 +151,6 @@
         align-items: center;
     }
 
-    /* Student ID exactly above the photo */
     .id-no-txt {
         font-size: 11px;
         font-weight: bold;
@@ -149,7 +161,6 @@
         white-space: nowrap;
         overflow: hidden;
         text-overflow: ellipsis;
-        -webkit-print-color-adjust: exact !important;
     }
 
     .student-photo {
@@ -201,7 +212,6 @@
         font-size: 15px;
         font-weight: 800;
         font-style: italic;
-        -webkit-print-color-adjust: exact !important;
     }
 
     .footer {
@@ -218,7 +228,144 @@
         border-top-left-radius: 50% 10px;
         border-top-right-radius: 50% 10px;
         box-sizing: border-box;
-        -webkit-print-color-adjust: exact !important;
+    }
+
+    /* BACK SIDE */
+    .id-card-back {
+        background: #eef7f2 !important;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+        padding: 10px 15px;
+        position: relative;
+    }
+
+    .bg-shape-1 {
+        position: absolute;
+        top: -40px;
+        right: -40px;
+        width: 180px;
+        height: 180px;
+        background: rgba(25, 135, 84, 0.12);
+        transform: rotate(45deg);
+        z-index: 1;
+        pointer-events: none;
+    }
+
+    .bg-shape-2 {
+        position: absolute;
+        bottom: -50px;
+        left: -50px;
+        width: 200px;
+        height: 200px;
+        background: rgba(15, 81, 50, 0.08);
+        transform: rotate(30deg);
+        z-index: 1;
+        pointer-events: none;
+    }
+
+    .back-content {
+        position: relative;
+        z-index: 2;
+        height: 100%;
+        display: flex;
+        flex-direction: column;
+        justify-content: space-between;
+    }
+
+    .back-header {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        border-bottom: 2px solid #198754;
+        padding-bottom: 4px;
+    }
+
+    .back-brand-name {
+        font-size: 15px;
+        font-weight: 800;
+        color: #0f5132;
+        text-transform: uppercase;
+        letter-spacing: 0.5px;
+    }
+
+    .back-main {
+        display: flex;
+        align-items: center;
+        justify-content: space-between;
+        margin: 2px 0;
+        padding: 0 10px;
+    }
+
+    .student-summary {
+        text-align: left;
+        max-width: 240px;
+    }
+
+    .student-summary .s-name {
+        font-size: 14px;
+        font-weight: 800;
+        color: #0f5132;
+        text-transform: uppercase;
+        white-space: nowrap;
+        overflow: hidden;
+        text-overflow: ellipsis;
+    }
+
+    .student-summary .s-id {
+        font-size: 11px;
+        font-weight: 700;
+        color: #198754;
+        margin-top: 1px;
+    }
+
+    .qr-wrapper {
+        background: #fff;
+        padding: 4px;
+        border-radius: 6px;
+        box-shadow: 0 2px 8px rgba(0,0,0,0.1);
+        border: 1px solid #198754;
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+
+    .dates-container {
+        display: flex;
+        justify-content: space-around;
+        background: #ffffff;
+        padding: 4px 8px;
+        border-radius: 6px;
+        border: 1px dashed #198754;
+        font-size: 11px;
+        font-weight: bold;
+        color: #333;
+    }
+
+    .dates-container span {
+        color: #0f5132;
+    }
+
+    .terms-box {
+        font-size: 9px;
+        color: #444;
+        line-height: 1.3;
+        background: rgba(255, 255, 255, 0.8);
+        padding: 5px 8px;
+        border-radius: 5px;
+    }
+
+    .terms-title {
+        font-weight: bold;
+        color: #0f5132;
+        margin-bottom: 1px;
+        font-size: 9.5px;
+        text-transform: uppercase;
+    }
+
+    .terms-list {
+        margin: 0;
+        padding-left: 12px;
     }
 
     .btn-group { margin-top: 20px; display: flex; gap: 10px; }
@@ -230,15 +377,20 @@
         * {
             -webkit-print-color-adjust: exact !important;
             print-color-adjust: exact !important;
-            color-adjust: exact !important;
         }
         body { background: #fff !important; padding: 0 !important; }
         #search-box, .btn-group { display: none !important; }
+        .cards-container { 
+            display: flex !important; 
+            flex-direction: row !important;
+            gap: 15px !important;
+            justify-content: center !important;
+            align-items: center !important;
+        }
         .id-card { 
-            display: block !important; 
             box-shadow: none !important; 
             border: 1px solid #198754 !important;
-            margin: 20px auto !important;
+            page-break-inside: avoid;
         }
     }
 </style>
@@ -258,70 +410,114 @@
     <button class="check-btn" onclick="manualSearch()">Generate ID Card</button>
 </div>
 
-<!-- ID Card Horizontal Canvas -->
-<div id="idCard" class="id-card">
-    <div class="header">
-        <img src="https://drive.google.com/thumbnail?id=1c1Dn_egViCuIOtJ8mTg6nAlHwVVEu2e0&sz=w300" class="logo-img" alt="Logo">
-        <div class="school-title">Barsoi Public School</div>
-        <div class="badge-tag">Identity Card</div>
-    </div>
-
-    <div class="card-body">
-        <!-- Left Section: Student ID precisely placed right above Photo -->
-        <div class="left-section">
-            <div class="id-no-txt" id="card-id">ID: BPS-000</div>
-            <img id="card-photo" src="" class="student-photo" alt="Student Photo">
+<!-- Container for Both Front & Back Cards (Side-by-Side in Landscape) -->
+<div id="cardsContainer" class="cards-container">
+    
+    <!-- FRONT SIDE -->
+    <div id="idCardFront" class="id-card">
+        <div class="header">
+            <img src="https://script.google.com/macros/s/AKfycbwor-L5vsAo82PQ8t14ztsVbNZ6SjMizTxvQKpPJPBeUknK7nRE4wrC37A9McdUFDYG/exec" class="logo-img" alt="Logo">
+            <div class="school-title">Barsoi Public School</div>
+            <div class="badge-tag">Identity Card</div>
         </div>
 
-        <div class="right-section">
-            <table class="details-table">
-                <tr>
-                    <td class="label">Name</td>
-                    <td class="colon">:</td>
-                    <td class="value highlight-name" id="card-name">-</td>
-                </tr>
-                <tr>
-                    <td class="label">Father's Name</td>
-                    <td class="colon">:</td>
-                    <td class="value" id="card-father">-</td>
-                </tr>
-                <!-- Class and Roll No separated on the same row -->
-                <tr>
-                    <td class="label">Class & Roll</td>
-                    <td class="colon">:</td>
-                    <td class="value">
-                        <span id="card-class" style="font-weight:bold;">-</span> 
-                        <span style="color:#198754; margin:0 4px;">|</span> 
-                        Roll: <span id="card-roll" style="font-weight:bold;">-</span>
-                    </td>
-                </tr>
-                <tr>
-                    <td class="label">Date of Birth</td>
-                    <td class="colon">:</td>
-                    <td class="value" id="card-dob">-</td>
-                </tr>
-                <tr>
-                    <td class="label">Blood Group</td>
-                    <td class="colon">:</td>
-                    <td class="value" id="card-blood">-</td>
-                </tr>
-                <tr>
-                    <td class="label">Address</td>
-                    <td class="colon">:</td>
-                    <td class="value" id="card-address">-</td>
-                </tr>
-                <tr>
-                    <td class="label">Mobile No.</td>
-                    <td class="colon">:</td>
-                    <td class="value" id="card-mobile">-</td>
-                </tr>
-            </table>
+        <div class="card-body">
+            <div class="left-section">
+                <div class="id-no-txt" id="card-id">ID: BPS-000</div>
+                <img id="card-photo" src="" class="student-photo" alt="Student Photo">
+            </div>
+
+            <div class="right-section">
+                <table class="details-table">
+                    <tr>
+                        <td class="label">Name</td>
+                        <td class="colon">:</td>
+                        <td class="value highlight-name" id="card-name">-</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Father's Name</td>
+                        <td class="colon">:</td>
+                        <td class="value" id="card-father">-</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Class & Roll</td>
+                        <td class="colon">:</td>
+                        <td class="value">
+                            <span id="card-class" style="font-weight:bold;">-</span> 
+                            <span style="color:#198754; margin:0 4px;">|</span> 
+                            Roll: <span id="card-roll" style="font-weight:bold;">-</span>
+                        </td>
+                    </tr>
+                    <tr>
+                        <td class="label">Date of Birth</td>
+                        <td class="colon">:</td>
+                        <td class="value" id="card-dob">-</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Blood Group</td>
+                        <td class="colon">:</td>
+                        <td class="value" id="card-blood">-</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Address</td>
+                        <td class="colon">:</td>
+                        <td class="value" id="card-address">-</td>
+                    </tr>
+                    <tr>
+                        <td class="label">Mobile No.</td>
+                        <td class="colon">:</td>
+                        <td class="value" id="card-mobile">-</td>
+                    </tr>
+                </table>
+            </div>
+        </div>
+
+        <div class="footer">
+            NIHAR NAGAR BLOCK ROAD, BARSOI, KATIHAR, BIHAR
         </div>
     </div>
 
-    <div class="footer">
-        NIHAR NAGAR BLOCK ROAD, BARSOI, KATIHAR, BIHAR
+    <!-- BACK SIDE -->
+    <div id="idCardBack" class="id-card id-card-back">
+        <div class="bg-shape-1"></div>
+        <div class="bg-shape-2"></div>
+        
+        <div class="back-content">
+            <div class="back-header">
+                <div class="back-brand-name">BARSOI PUBLIC SCHOOL</div>
+                <div style="font-size:10px; font-weight:bold; color:#198754;">ATTENDANCE CARD</div>
+            </div>
+
+            <div class="back-main">
+                <div class="student-summary">
+                    <div class="s-name" id="back-card-name">STUDENT NAME</div>
+                    <div class="s-id" id="back-card-id">ID: BPS-000</div>
+                </div>
+
+                <!-- Large QR Code for Attendance -->
+                <div class="qr-wrapper">
+                    <div id="qrcode"></div>
+                </div>
+            </div>
+
+            <!-- Joining & Expiry Dates -->
+            <div class="dates-container">
+                <div>Join Date: <span id="card-join">-</span></div>
+                <div>Expire Date: <span id="card-expire">-</span></div>
+            </div>
+
+            <!-- Terms & Instructions -->
+            <div class="terms-box">
+                <div class="terms-title">Instructions / Terms & Conditions:</div>
+                <ul class="terms-list">
+                    <li>Students must wear this identity card inside the school campus at all times.</li>
+                    <li>This card is non-transferable and must be presented for automated attendance.</li>
+                    <li>If found, please return to Barsoi Public School, Katihar, Bihar.</li>
+                </ul>
+            </div>
+        </div>
     </div>
+
 </div>
 
 <div class="btn-group" id="btnGroup" style="display:none;">
@@ -330,7 +526,7 @@
 </div>
 
 <script>
-    const API_URL = "https://script.google.com/macros/s/AKfycbzfLzw4cfknnVVEXvWV_AMBrAKREIHvTKsFt1ckH0GkK0j8rvUBTQPY5xAR-SnDKoyk/exec";
+    const API_URL = "https://script.google.com/macros/s/AKfycbyc4zx6o0oDrDogjKKM-jqBsQgCRIV2xVwGEKlkXSD-zbZef40FaLvaKnj0jCi37Cwg/exec";
 
     window.addEventListener('DOMContentLoaded', () => {
         const params = new URLSearchParams(window.location.search);
@@ -356,14 +552,12 @@
 
     function formatDate(rawDate) {
         if (!rawDate) return "-";
-        if (typeof rawDate === 'string' && rawDate.includes("T")) {
-            const d = new Date(rawDate);
-            if (!isNaN(d.getTime())) {
-                const day = String(d.getDate()).padStart(2, '0');
-                const month = String(d.getMonth() + 1).padStart(2, '0');
-                const year = d.getFullYear();
-                return `${day}-${month}-${year}`;
-            }
+        const d = new Date(rawDate);
+        if (!isNaN(d.getTime())) {
+            const day = String(d.getDate()).padStart(2, '0');
+            const month = String(d.getMonth() + 1).padStart(2, '0');
+            const year = d.getFullYear();
+            return `${day}-${month}-${year}`;
         }
         return rawDate;
     }
@@ -386,16 +580,17 @@
                     return Swal.fire('Error', 'Student record not found in All Students sheet!', 'error');
                 }
 
-                // Dynamic Field Fill
-                document.getElementById('card-id').innerText = "ID: " + getSafeVal(d.regNo, "BPS-" + roll);
-                document.getElementById('card-name').innerText = getSafeVal(d.name);
+                // Front Side Fields
+                const studentId = getSafeVal(d.regNo, "BPS-" + roll);
+                const studentName = getSafeVal(d.name);
+
+                document.getElementById('card-id').innerText = "ID: " + studentId;
+                document.getElementById('card-name').innerText = studentName;
                 document.getElementById('card-father').innerText = getSafeVal(d.father);
                 document.getElementById('card-class').innerText = getSafeVal(d.class, cls);
                 document.getElementById('card-roll').innerText = getSafeVal(d.rollNo, roll);
                 
-                const rawDob = getSafeVal(d.dob);
-                document.getElementById('card-dob').innerText = formatDate(rawDob);
-                
+                document.getElementById('card-dob').innerText = formatDate(d.dob);
                 document.getElementById('card-blood').innerText = getSafeVal(d.bloodGroup, "N/A");
                 document.getElementById('card-address').innerText = getSafeVal(d.address, "Barsoi, Katihar");
                 document.getElementById('card-mobile').innerText = getSafeVal(d.mobile, "-");
@@ -403,9 +598,33 @@
                 const photoVal = getSafeVal(d.photo, "");
                 document.getElementById('card-photo').src = photoVal !== "-" && photoVal !== "" ? photoVal : "https://via.placeholder.com/110x125?text=No+Photo";
                 
-                // UI Toggle
+                // Back Side Fields
+                document.getElementById('back-card-name').innerText = studentName;
+                document.getElementById('back-card-id').innerText = "ID: " + studentId;
+                document.getElementById('card-join').innerText = formatDate(d.joinDate);
+                document.getElementById('card-expire').innerText = formatDate(d.expireDate);
+
+                // Large Attendance QR Code Generation (115x115)
+                document.getElementById('qrcode').innerHTML = "";
+                const attendanceData = JSON.stringify({
+                    id: studentId,
+                    roll: getSafeVal(d.rollNo, roll),
+                    class: getSafeVal(d.class, cls),
+                    name: studentName
+                });
+
+                new QRCode(document.getElementById("qrcode"), {
+                    text: attendanceData,
+                    width: 115,
+                    height: 115,
+                    colorDark : "#0f5132",
+                    colorLight : "#ffffff",
+                    correctLevel : QRCode.CorrectLevel.H
+                });
+
+                // Show UI
                 document.getElementById('search-box').style.display = 'none';
-                document.getElementById('idCard').style.display = 'block';
+                document.getElementById('cardsContainer').style.display = 'flex';
                 document.getElementById('btnGroup').style.display = 'flex';
             })
             .catch(err => {
