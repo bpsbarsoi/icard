@@ -128,13 +128,14 @@
 
     .logo-img {
         position: absolute;
-        left: 12px;
+        left: 10px;
         top: 6px;
-        width: 48px;
-        height: 48px;
-        border-radius: 50%;
-        background: #fff;
-        padding: 2px;
+        width: 40px;
+        height: 40px;
+        object-fit: contain;
+        background: transparent !important;
+        border: none !important;
+        box-shadow: none !important;
     }
 
     .card-body {
@@ -212,6 +213,31 @@
         font-size: 15px;
         font-weight: 800;
         font-style: italic;
+    }
+
+    /* Principal Signature Styles */
+    .principal-sign-container {
+        position: absolute;
+        right: 15px;
+        bottom: 22px;
+        text-align: center;
+    }
+
+    .sign-img {
+        height: 30px;
+        max-width: 100px;
+        object-fit: contain;
+        display: block;
+        margin: 0 auto 2px auto;
+    }
+
+    .sign-label {
+        font-size: 9px;
+        font-weight: bold;
+        color: #0f5132;
+        text-transform: uppercase;
+        border-top: 1px solid #0f5132;
+        padding-top: 2px;
     }
 
     .footer {
@@ -416,7 +442,7 @@
     <!-- FRONT SIDE -->
     <div id="idCardFront" class="id-card">
         <div class="header">
-            <img src="https://script.google.com/macros/s/AKfycbwor-L5vsAo82PQ8t14ztsVbNZ6SjMizTxvQKpPJPBeUknK7nRE4wrC37A9McdUFDYG/exec" class="logo-img" alt="Logo">
+            <img src="https://drive.google.com/thumbnail?id=1c1Dn_egViCuIOtJ8mTg6nAlHwVVEu2e0&sz=w300" class="logo-img" alt="Logo">
             <div class="school-title">Barsoi Public School</div>
             <div class="badge-tag">Identity Card</div>
         </div>
@@ -470,6 +496,12 @@
                     </tr>
                 </table>
             </div>
+        </div>
+
+        <!-- Principal Signature Section Added Here -->
+        <div class="principal-sign-container">
+            <img src="https://drive.google.com/thumbnail?id=1JwgXbgsbPzZ2z2indNOZWOK-PWwaQvqN&sz=w300" class="sign-img" alt="Principal Signature">
+            <div class="sign-label">Principal's Sign</div>
         </div>
 
         <div class="footer">
