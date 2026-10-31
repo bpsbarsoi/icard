@@ -49,9 +49,9 @@
         color: #664d03; 
         background: #ffecb5; 
         font-weight: bold; 
-        padding: 3px 10px; 
-        border-radius: 6px; 
-        display: inline-block;
+        padding: 2px 6px; 
+        border-radius: 4px; 
+        font-size: 11px;
     }
 </style>
 </head>
@@ -73,6 +73,9 @@
         </li>
         <li class="nav-item" role="presentation">
             <button class="nav-link" id="monthly-tab" data-bs-toggle="tab" data-bs-target="#monthly-sec" type="button"><i class="fa-solid fa-calendar-days me-1"></i> Monthly Report</button>
+        </li>
+        <li class="nav-item" role="presentation">
+            <button class="nav-link" id="register-tab" data-bs-toggle="tab" data-bs-target="#register-sec" type="button"><i class="fa-solid id-card me-1 fa-book"></i> Attendance Register</button>
         </li>
     </ul>
 
@@ -160,12 +163,16 @@
                     </div>
                 </div>
 
+                <!-- 3 Boxes for Daily Report -->
                 <div class="row g-3 mb-3">
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <div class="stat-card bg-primary">Total Students: <span id="dailyTotalCount">0</span></div>
                     </div>
-                    <div class="col-md-6">
+                    <div class="col-md-4">
                         <div class="stat-card bg-success">Present Count: <span id="dailyPresentCount">0</span></div>
+                    </div>
+                    <div class="col-md-4">
+                        <div class="stat-card bg-danger">Absent Count: <span id="dailyAbsentCount">0</span></div>
                     </div>
                 </div>
 
@@ -214,7 +221,7 @@
                     </div>
                 </div>
 
-                <!-- Monthly Summary Boxes (Total, Present, Absent) -->
+                <!-- Monthly Summary Boxes -->
                 <div class="row g-3 mb-4" id="monthlyStatsRow" style="display: none;">
                     <div class="col-md-4">
                         <div class="stat-card" style="background: linear-gradient(135deg, #0d6efd, #0b5ed7);">
@@ -253,6 +260,45 @@
             </div>
         </div>
 
+        <!-- 4. ATTENDANCE REGISTER SECTION -->
+        <div class="tab-pane fade" id="register-sec">
+            <div class="card-box">
+                <h5 class="fw-bold text-success mb-3"><i class="fa-solid fa-book me-2"></i>Attendance Register</h5>
+                <div class="row g-3 align-items-end mb-3">
+                    <div class="col-md-5">
+                        <label class="form-label fw-bold">Select Class</label>
+                        <select id="registerClassList" class="form-select">
+                            <option value="">Select Class</option>
+                        </select>
+                    </div>
+                    <div class="col-md-5">
+                        <label class="form-label fw-bold">Select Month</label>
+                        <input type="month" id="registerMonthPicker" class="form-control">
+                    </div>
+                    <div class="col-md-2">
+                        <button class="btn btn-success w-100 fw-bold" onclick="generateAttendanceRegister()"><i class="fa-solid fa-file-lines me-1"></i> Report</button>
+                    </div>
+                </div>
+
+                <div class="table-responsive" style="max-height: 550px;">
+                    <table class="table table-bordered table-striped table-hover align-middle text-center" style="font-size: 13px;">
+                        <thead class="table-dark" id="registerTableHead">
+                            <tr>
+                                <th class="align-middle">Roll No</th>
+                                <th class="align-middle">Student ID</th>
+                                <th class="align-middle">Class</th>
+                                <th class="align-middle">Student Name</th>
+                                <th class="text-muted">Select Class & Month</th>
+                            </tr>
+                        </thead>
+                        <tbody id="registerTableBody">
+                            <tr><td colspan="5" class="text-center text-muted py-4">Select Class and Month then click 'Report'.</td></tr>
+                        </tbody>
+                    </table>
+                </div>
+            </div>
+        </div>
+
     </div>
 </div>
 
@@ -271,6 +317,7 @@
         document.getElementById('dashDateFilter').value = `${yyyy}-${mm}-${dd}`;
         document.getElementById('dailyDatePicker').value = `${yyyy}-${mm}-${dd}`;
         document.getElementById('monthlyPicker').value = `${yyyy}-${mm}`;
+        document.getElementById('registerMonthPicker').value = `${yyyy}-${mm}`;
 
         fetchInitialData();
     });
@@ -310,15 +357,18 @@
         const dashSelect = document.getElementById('dashClassFilter');
         const dailySelect = document.getElementById('dailyClassList');
         const monthlySelect = document.getElementById('monthlyClassList');
+        const registerSelect = document.getElementById('registerClassList');
 
         dashSelect.innerHTML = '<option value="">All Classes</option>';
         dailySelect.innerHTML = '<option value="">Select Class</option>';
         monthlySelect.innerHTML = '<option value="">Select Class</option>';
+        registerSelect.innerHTML = '<option value="">Select Class</option>';
 
         classListGlobal.forEach(cls => {
             dashSelect.innerHTML += `<option value="${cls}">${cls}</option>`;
             dailySelect.innerHTML += `<option value="${cls}">${cls}</option>`;
             monthlySelect.innerHTML += `<option value="${cls}">${cls}</option>`;
+            registerSelect.innerHTML += `<option value="${cls}">${cls}</option>`;
         });
     }
 
@@ -388,33 +438,90 @@
         }
 
         const parts = dateRaw.split('-');
-        const formattedDate = `${parts[2]}/${parts[1]}/${parts[0]}`;
+        const year = parts[0];
+        const month = parts[1];
+        const day = parts[2];
+        const formattedDate = `${day}/${month}/${year}`;
 
-        const filtered = rawDashboardData.filter(r => {
-            return String(r.className).toLowerCase().trim() === cls.toLowerCase() && String(r.date).trim() === formattedDate;
+        const selectedDateObj = new Date(year, month - 1, day);
+        const isSunday = (selectedDateObj.getDay() === 0);
+
+        const classStudents = [];
+        const seenStudents = new Set();
+        rawDashboardData.forEach(r => {
+            if (String(r.className).toLowerCase().trim() === cls.toLowerCase()) {
+                const key = String(r.name).trim().toLowerCase();
+                if (!seenStudents.has(key)) {
+                    seenStudents.add(key);
+                    classStudents.push({
+                        name: r.name,
+                        rollNo: r.rollNo,
+                        className: r.className
+                    });
+                }
+            }
         });
 
-        document.getElementById('dailyTotalCount').innerText = filtered.length;
-        document.getElementById('dailyPresentCount').innerText = filtered.filter(r => String(r.status).toLowerCase() === 'present').length;
+        classStudents.sort((a, b) => Number(a.rollNo) - Number(b.rollNo));
+
+        document.getElementById('dailyTotalCount').innerText = classStudents.length;
 
         const tbody = document.getElementById('dailyReportTableBody');
-        if (filtered.length === 0) {
-            tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-3">No attendance entries found for selected date and class.</td></tr>`;
+        if (classStudents.length === 0) {
+            document.getElementById('dailyPresentCount').innerText = 0;
+            document.getElementById('dailyAbsentCount').innerText = 0;
+            tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-3">No students found for selected class.</td></tr>`;
             return;
         }
 
+        let presentCount = 0;
+        let absentCount = 0;
         let html = '';
-        filtered.forEach(r => {
-            html += `
-                <tr>
-                    <td><b>${r.name}</b></td>
-                    <td>${r.rollNo}</td>
-                    <td>${r.className}</td>
-                    <td class="status-p">${r.status}</td>
-                    <td>${r.date}</td>
-                </tr>
-            `;
+
+        classStudents.forEach(student => {
+            const record = rawDashboardData.find(r => {
+                return String(r.className).toLowerCase().trim() === cls.toLowerCase() &&
+                       String(r.name).trim().toLowerCase() === student.name.toLowerCase() &&
+                       String(r.date).trim() === formattedDate;
+            });
+
+            if (isSunday) {
+                html += `
+                    <tr>
+                        <td><b>${student.name}</b></td>
+                        <td>${student.rollNo}</td>
+                        <td>${student.className}</td>
+                        <td><span class="status-off">Week Off</span></td>
+                        <td>${formattedDate}</td>
+                    </tr>
+                `;
+            } else if (record && String(record.status).toLowerCase() === 'present') {
+                presentCount++;
+                html += `
+                    <tr>
+                        <td><b>${student.name}</b></td>
+                        <td>${student.rollNo}</td>
+                        <td>${student.className}</td>
+                        <td><span class="status-p">Present</span></td>
+                        <td>${formattedDate}</td>
+                    </tr>
+                `;
+            } else {
+                absentCount++;
+                html += `
+                    <tr>
+                        <td><b>${student.name}</b></td>
+                        <td>${student.rollNo}</td>
+                        <td>${student.className}</td>
+                        <td><span class="status-a">Absent</span></td>
+                        <td>${formattedDate}</td>
+                    </tr>
+                `;
+            }
         });
+
+        document.getElementById('dailyPresentCount').innerText = presentCount;
+        document.getElementById('dailyAbsentCount').innerText = absentCount;
         tbody.innerHTML = html;
     }
 
@@ -523,11 +630,152 @@
             tbody.appendChild(tr);
         }
 
-        // Display and update the 3 stats boxes values
         document.getElementById('monthlyStatsRow').style.display = 'flex';
         document.getElementById('monthlyTotalDays').innerText = totalDaysCount;
         document.getElementById('monthlyPresentCount').innerText = presentCount;
         document.getElementById('monthlyAbsentCount').innerText = absentCount;
+    }
+
+    /* ---------------- 4. ATTENDANCE REGISTER LOGIC ---------------- */
+    function generateAttendanceRegister() {
+        const cls = document.getElementById('registerClassList').value.trim();
+        const monthVal = document.getElementById('registerMonthPicker').value;
+
+        if (!cls) {
+            Swal.fire('Warning', 'Please select a Class!', 'warning');
+            return;
+        }
+        if (!monthVal) {
+            Swal.fire('Warning', 'Please select a Month!', 'warning');
+            return;
+        }
+
+        const [year, month] = monthVal.split('-');
+        const daysInMonth = new Date(year, month, 0).getDate();
+        const today = new Date();
+        today.setHours(0,0,0,0);
+
+        // Get unique students for this class
+        const classStudents = [];
+        const seenStudents = new Set();
+        rawDashboardData.forEach(r => {
+            if (String(r.className).toLowerCase().trim() === cls.toLowerCase()) {
+                const key = String(r.name).trim().toLowerCase();
+                if (!seenStudents.has(key)) {
+                    seenStudents.add(key);
+                    classStudents.push({
+                        name: r.name,
+                        rollNo: r.rollNo || '-',
+                        studentId: r.studentId || '-'
+                    });
+                }
+            }
+        });
+
+        classStudents.sort((a, b) => Number(a.rollNo) - Number(b.rollNo));
+
+        const thead = document.getElementById('registerTableHead');
+        const tbody = document.getElementById('registerTableBody');
+
+        if (classStudents.length === 0) {
+            thead.innerHTML = `
+                <tr>
+                    <th>Roll No</th>
+                    <th>Student ID</th>
+                    <th>Class</th>
+                    <th>Student Name</th>
+                    <th>No Data</th>
+                </tr>
+            `;
+            tbody.innerHTML = `<tr><td colspan="5" class="text-center text-muted py-4">No students found for this class.</td></tr>`;
+            return;
+        }
+
+        // Build Table Header with Dates
+        let headHtml = `
+            <tr>
+                <th class="align-middle">Roll No</th>
+                <th class="align-middle">Student ID</th>
+                <th class="align-middle">Class</th>
+                <th class="align-middle">Student Name</th>
+        `;
+
+        const dateStringList = [];
+        for (let day = 1; day <= daysInMonth; day++) {
+            const dayFormatted = String(day).padStart(2, '0');
+            const dateStr = `${dayFormatted}/${month}/${year}`;
+            dateStringList.push(dateStr);
+            headHtml += `<th class="align-middle" style="font-size: 11px; min-width: 75px;">${dateStr}</th>`;
+        }
+        headHtml += `</tr>`;
+        thead.innerHTML = headHtml;
+
+        // Build Table Body
+        let bodyHtml = '';
+        classStudents.forEach(student => {
+            bodyHtml += `
+                <tr>
+                    <td><b>${student.rollNo}</b></td>
+                    <td>${student.studentId}</td>
+                    <td><span class="badge bg-success">${cls}</span></td>
+                    <td class="text-start"><b>${student.name}</b></td>
+            `;
+
+            dateStringList.forEach(dateStr => {
+                const parts = dateStr.split('/');
+                const dObj = new Date(parts[2], parts[1] - 1, parts[0]);
+                const isSunday = (dObj.getDay() === 0);
+
+                const record = rawDashboardData.find(r => {
+                    return String(r.className).toLowerCase().trim() === cls.toLowerCase() &&
+                           String(r.name).trim().toLowerCase() === student.name.toLowerCase() &&
+                           String(r.date).trim() === dateStr;
+                });
+
+                if (dObj > today) {
+                    bodyHtml += `<td class="text-muted">-</td>`;
+                } else if (isSunday) {
+                    bodyHtml += `<td><span class="status-off">Week Off</span></td>`;
+                } else if (record && String(record.status).toLowerCase() === 'present') {
+                    bodyHtml += `<td><span class="status-p">P</span></td>`;
+                } else {
+                    bodyHtml += `<td><span class="status-a">A</span></td>`;
+                }
+            });
+
+            bodyHtml += `</tr>`;
+        });
+
+        // Add Total Row at the bottom of the table for each date column
+        bodyHtml += `
+            <tr class="table-secondary fw-bold">
+                <td colspan="4" class="text-end">Total Present:</td>
+        `;
+
+        dateStringList.forEach(dateStr => {
+            const parts = dateStr.split('/');
+            const dObj = new Date(parts[2], parts[1] - 1, parts[0]);
+            
+            if (dObj > today || dObj.getDay() === 0) {
+                bodyHtml += `<td>-</td>`;
+            } else {
+                let presentDayCount = 0;
+                classStudents.forEach(student => {
+                    const record = rawDashboardData.find(r => {
+                        return String(r.className).toLowerCase().trim() === cls.toLowerCase() &&
+                               String(r.name).trim().toLowerCase() === student.name.toLowerCase() &&
+                               String(r.date).trim() === dateStr;
+                    });
+                    if (record && String(record.status).toLowerCase() === 'present') {
+                        presentDayCount++;
+                    }
+                });
+                bodyHtml += `<td class="text-success">${presentDayCount}</td>`;
+            }
+        });
+
+        bodyHtml += `</tr>`;
+        tbody.innerHTML = bodyHtml;
     }
 </script>
 </body>
